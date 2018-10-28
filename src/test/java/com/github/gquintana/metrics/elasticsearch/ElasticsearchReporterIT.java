@@ -37,7 +37,7 @@ public class ElasticsearchReporterIT {
         registry.registerAll(new GarbageCollectorMetricSet());
 
         // Application metrics
-        Random random = new Random();
+        final Random random = new Random();
         registry.register("gauge", new Gauge<Integer>() {
             @Override
             public Integer getValue() {

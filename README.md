@@ -1,5 +1,6 @@
 # Metrics Elasticsearch Reporter
 [Dropwizard Metrics](https://metrics.dropwizard.io) Elasticsearch reporter
+[![Build Status](https://travis-ci.org/gquintana/metrics-elasticsearch.svg?branch=master)](https://travis-ci.org/gquintana/metrics-elasticsearch)
 
 This a Yammer|Codahale|Dropwizard Metrics extension to report metrics in an Elasticsearch serveur using Metricbeat-like documents.
 

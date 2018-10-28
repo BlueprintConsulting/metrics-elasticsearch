@@ -57,7 +57,7 @@ public class MetricSetTest {
         registry.register("gauge", gauge);
         MetricSet metricSet = new MetricSet(System.currentTimeMillis(), "localhost");
         metricSet.addGauge("gauge", gauge);
-        assertThat(get(metricSet, "gauge", "value"), equalTo(123));
+        assertThat(get(metricSet, Integer.class, "gauge", "value"), equalTo(123));
         assertThat(metricSet.getHostname(), equalTo("localhost"));
         writeJson(metricSet, "gauge.json");
     }
@@ -71,7 +71,7 @@ public class MetricSetTest {
         counter.inc(3L);
         MetricSet metricSet = new MetricSet(System.currentTimeMillis(), "localhost");
         metricSet.addCounter("counter", counter);
-        assertThat(get(metricSet, "counter", "count"), equalTo(6L));
+        assertThat(get(metricSet, Long.class, "counter", "count"), equalTo(6L));
         writeJson(metricSet, "counter.json");
     }
 
@@ -110,10 +110,10 @@ public class MetricSetTest {
         clock.delta = 0L;
         MetricSet metricSet = new MetricSet(System.currentTimeMillis(), "localhost");
         metricSet.addMeter("meter", meter, rateConverter);
-        assertThat(get(metricSet, "meter", "count"), equalTo(4L));
-        assertThat(get(metricSet, "meter", "rate1m"), equalTo(0.8D));
-        assertThat(get(metricSet, "meter", "rate5m"), equalTo(0.8D));
-        assertThat(get(metricSet, "meter", "rate15m"), equalTo(0.8D));
+        assertThat(get(metricSet, Long.class, "meter", "count"), equalTo(4L));
+        assertThat(get(metricSet, Double.class, "meter", "rate1m"), equalTo(0.8D));
+        assertThat(get(metricSet, Double.class,"meter", "rate5m"), equalTo(0.8D));
+        assertThat(get(metricSet, Double.class,"meter", "rate15m"), equalTo(0.8D));
         writeJson(metricSet, "meter.json");
     }
 
@@ -132,14 +132,14 @@ public class MetricSetTest {
         histogram.update(5);
         MetricSet metricSet = new MetricSet(System.currentTimeMillis(), "localhost");
         metricSet.addHistogram("histogram", histogram);
-        assertThat(get(metricSet, "histogram", "count"), equalTo(9L));
-        assertThat(get(metricSet, "histogram", "min"), equalTo(1L));
-        assertThat(get(metricSet, "histogram", "max"), equalTo(5L));
-        assertThat(get(metricSet, "histogram", "mean"), equalTo(3D));
-        assertThat(get(metricSet, "histogram", "median"), equalTo(3D));
-        assertThat(get(metricSet, "histogram", "percentile75"), equalTo(4D));
-        assertThat(get(metricSet, "histogram", "percentile95"), equalTo(5D));
-        assertThat(get(metricSet, "histogram", "percentile99"), equalTo(5D));
+        assertThat(get(metricSet, Long.class, "histogram", "count"), equalTo(9L));
+        assertThat(get(metricSet, Long.class, "histogram", "min"), equalTo(1L));
+        assertThat(get(metricSet, Long.class, "histogram", "max"), equalTo(5L));
+        assertThat(get(metricSet, Double.class,"histogram", "mean"), equalTo(3D));
+        assertThat(get(metricSet, Double.class,"histogram", "median"), equalTo(3D));
+        assertThat(get(metricSet, Double.class,"histogram", "percentile75"), equalTo(4D));
+        assertThat(get(metricSet, Double.class,"histogram", "percentile95"), equalTo(5D));
+        assertThat(get(metricSet, Double.class,"histogram", "percentile99"), equalTo(5D));
         writeJson(metricSet, "histogram.json");
     }
 
@@ -152,19 +152,19 @@ public class MetricSetTest {
         timer.update(14L, TimeUnit.SECONDS);
         MetricSet metricSet = new MetricSet(System.currentTimeMillis(), "localhost");
         metricSet.addTimer("timer", timer, durationConverter, rateConverter);
-        assertThat(get(metricSet, "timer", "count"), equalTo(3L));
-        assertThat(get(metricSet, "timer", "min"), equalTo(8000L));
-        assertThat(get(metricSet, "timer", "max"), equalTo(14000L));
-        assertThat(get(metricSet, "timer", "mean"), equalTo(10666D));
+        assertThat(get(metricSet, Long.class, "timer", "count"), equalTo(3L));
+        assertThat(get(metricSet, Long.class, "timer", "min"), equalTo(8000L));
+        assertThat(get(metricSet, Long.class, "timer", "max"), equalTo(14000L));
+        assertThat(get(metricSet, Double.class, "timer", "mean"), equalTo(10666D));
         writeJson(metricSet, "timer.json");
     }
 
-    private Object get(MetricSet metricSet, String... path) {
+    private <T> T get(MetricSet metricSet, Class<T> type, String... path) {
         Map<String, Object> map = metricSet.getMetrics();
         for (int i = 0; i < path.length - 1; i++) {
             map = (Map) map.get(path[i]);
         }
-        return map.get(path[path.length - 1]);
+        return type.cast(map.get(path[path.length - 1]));
     }
 
     private void writeJson(MetricSet metricSet, String fileName) throws IOException {

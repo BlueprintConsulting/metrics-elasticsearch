@@ -26,8 +26,30 @@ public class ElasticsearchReporter extends ScheduledReporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchReporter.class);
 
     private static final String NAME = "elasticsearch-reporter";
+    /**
+     * Current host name
+     */
     private final String hostname;
     private final ElasticsearchClient elasticsearchClient;
+
+    private final RateConverter rateConverter = new RateConverter() {
+        @Override
+        public double convert(double rate) {
+            return convertRate(rate);
+        }
+    };
+
+    private final DurationConverter durationConverter = new DurationConverter() {
+        @Override
+        public long convert(long duration) {
+            return (long) convertDuration(duration);
+        }
+
+        @Override
+        public double convert(double rate) {
+            return convertDuration(rate);
+        }
+    };
 
     private ElasticsearchReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit, TimeUnit durationUnit, String hostname, ElasticsearchClient elasticsearchClient) {
         super(registry, NAME, filter, rateUnit, durationUnit);
@@ -56,23 +78,6 @@ public class ElasticsearchReporter extends ScheduledReporter {
         for (Map.Entry<String, Histogram> histogram : histograms.entrySet()) {
             metricSet.addHistogram(histogram.getKey(), histogram.getValue());
         }
-        RateConverter rateConverter = new RateConverter() {
-            @Override
-            public double convert(double rate) {
-                return convertRate(rate);
-            }
-        };
-        DurationConverter durationConverter = new DurationConverter() {
-            @Override
-            public long convert(long duration) {
-                return (long) convertDuration(duration);
-            }
-
-            @Override
-            public double convert(double rate) {
-                return convertDuration(rate);
-            }
-        };
         for (Map.Entry<String, Meter> meter : meters.entrySet()) {
             metricSet.addMeter(meter.getKey(), meter.getValue(), rateConverter);
         }
@@ -87,8 +92,10 @@ public class ElasticsearchReporter extends ScheduledReporter {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Builder
 
+    /**
+     * Builder of {@link ElasticsearchReporter}
+     */
     public static class Builder {
         private final MetricRegistry registry;
         private TimeUnit rateUnit = TimeUnit.SECONDS;
@@ -111,27 +118,42 @@ public class ElasticsearchReporter extends ScheduledReporter {
             }
         }
 
+        /**
+         * Rate unit in exported metrics, default: events/second
+         */
         public ElasticsearchReporter.Builder convertRatesTo(TimeUnit rateUnit) {
             this.rateUnit = rateUnit;
             return this;
         }
 
 
+        /**
+         * Duration unit in exported metrics, default: milliseconds
+         */
         public ElasticsearchReporter.Builder convertDurationsTo(TimeUnit durationUnit) {
             this.durationUnit = durationUnit;
             return this;
         }
 
+        /**
+         * Select which metrics must be reported, default: all metrics
+         */
         public ElasticsearchReporter.Builder filter(MetricFilter filter) {
             this.filter = filter;
             return this;
         }
 
+        /**
+         * Current hostname to be added in metric documents, default: host name
+         */
         public ElasticsearchReporter.Builder hostname(String hostname) {
             this.hostname = hostname;
             return this;
         }
 
+        /**
+         * Elasticsearch username and password
+         */
         public ElasticsearchReporter.Builder basicAuth(String username, String password) {
             this.username = username;
             this.password = password;
@@ -139,7 +161,7 @@ public class ElasticsearchReporter extends ScheduledReporter {
         }
 
         /**
-         * Elasticsearch URL, ex: http://elasticsearch:9200
+         * Elasticsearch URL, ex: https://elasticsearch:9200, default: http://elasticsearch:9200
          */
         public ElasticsearchReporter.Builder url(String url) throws MalformedURLException {
             // Check URL is valid
@@ -149,7 +171,7 @@ public class ElasticsearchReporter extends ScheduledReporter {
         }
 
         /**
-         * Index name prefix, ex: metrics-
+         * Index name prefix, ex: metrics-, default: metricbeat-dropwizard-
          */
         public ElasticsearchReporter.Builder indexPrefix(String indexPrefix) {
             this.indexPrefix = indexPrefix;
@@ -157,7 +179,7 @@ public class ElasticsearchReporter extends ScheduledReporter {
         }
 
         /**
-         * Index name date suffix format, ex: yyyy.MM.dd
+         * Index name date suffix format, ex: yyyy.MM, default: yyyy.MM.dd
          */
         public ElasticsearchReporter.Builder indexDateFormat(String indexDateFormat) {
             this.indexDateFormat = new SimpleDateFormat(indexDateFormat);
