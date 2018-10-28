@@ -3,3 +3,10 @@ language: java
 jdk:
   - openjdk8
 
+services:
+  - elasticsearch
+
+# Let Elasticsearch start
+before_script:
+  - sleep 10
+
