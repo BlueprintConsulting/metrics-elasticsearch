@@ -1,4 +1,5 @@
 # Metrics Elasticsearch 
+[Dropwizard Metrics](https://metrics.dropwizard.io) Elasticsearch reporter
 
 This a Yammer|Codahale|Dropwizard Metrics extension to report metrics in an Elasticsearch serveur using Metricbeat-like documents.
 
@@ -17,6 +18,4 @@ ElasticsearchReporter reporter = ElasticsearchReporter.forRegistry(registry)
     .build();
 reporter.start(500, TimeUnit.MILLISECONDS);
 ```
-
-
 
